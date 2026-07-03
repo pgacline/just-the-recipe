@@ -1,4 +1,4 @@
-const SITE_URL = "http://localhost:3000";
+const SITE_URL = "https://just-the-recipe-delta.vercel.app";
 
 document.getElementById("extractBtn").addEventListener("click", async () => {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });

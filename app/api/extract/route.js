@@ -5,12 +5,10 @@ import { supabase } from "@/lib/supabase";
 
 const client = new Anthropic();
 
-// Turn any ingredient format into a plain readable string
 function normalizeIngredient(ing) {
   if (typeof ing === "string") return ing;
   if (ing && typeof ing === "object") {
-    const parts = [ing.amount, ing.unit, ing.item || ing.name, ing.note]
-      .filter(Boolean);
+    const parts = [ing.amount, ing.unit, ing.item || ing.name, ing.note].filter(Boolean);
     return parts.join(" ").trim();
   }
   return String(ing);
@@ -61,7 +59,7 @@ async function extractWithAI(html) {
     max_tokens: 1024,
     messages: [{
       role: "user",
-      content: "Extract the recipe from this text and return ONLY a JSON object with fields: title, servings, time, ingredients (array of plain text strings like '2 cups flour'), steps (array of plain text strings). Each ingredient and step MUST be a single plain string, never an object. Return ONLY the raw JSON with no markdown formatting, no code fences, no backticks, no explanation. Text: " + cleanText
+      content: "Extract the recipe from this text and return ONLY a JSON object with fields: title, servings, time, ingredients (array of plain text strings), steps (array of plain text strings). Return ONLY raw JSON, no markdown, no code fences. Text: " + cleanText
     }],
   });
   let text = message.content[0].text.trim();
@@ -89,6 +87,7 @@ export async function GET(request) {
     if (existing) {
       console.log("Found cached recipe for:", url);
       return Response.json({
+        id: existing.id,
         title: existing.title,
         servings: existing.servings,
         time: existing.time,
@@ -116,30 +115,32 @@ export async function GET(request) {
       method = "ai";
     }
 
-    const { error: insertError } = await supabase.from("recipes").insert({
-      url,
-      title: recipe.title,
-      servings: String(recipe.servings || ""),
-      time: recipe.time,
-      ingredients: recipe.ingredients,
-      steps: recipe.steps,
-      method,
-    });
+    const { data: inserted, error: insertError } = await supabase
+      .from("recipes")
+      .insert({
+        url,
+        title: recipe.title,
+        servings: String(recipe.servings || ""),
+        time: recipe.time,
+        ingredients: recipe.ingredients,
+        steps: recipe.steps,
+        method,
+      })
+      .select()
+      .single();
 
     if (insertError) {
       console.error("Failed to save recipe to database:", insertError.message);
     }
 
-    return Response.json({ ...recipe, method, cached: false });
+    return Response.json({ ...recipe, id: inserted?.id, method, cached: false });
 
   } catch (error) {
     console.error("EXTRACTION ERROR for", url, ":", error.message);
-
     const status = error.response?.status;
-
     if (status === 403 || status === 401) {
       return Response.json(
-        { error: "This site blocks automatic recipe extraction. Try copying the recipe text directly, or try a different site." },
+        { error: "This site blocks automatic recipe extraction. Try a different site." },
         { status: 422 }
       );
     }
@@ -155,7 +156,6 @@ export async function GET(request) {
         { status: 422 }
       );
     }
-
     return Response.json(
       { error: "Couldn't extract a recipe from that page. It may not contain a standard recipe format." },
       { status: 422 }

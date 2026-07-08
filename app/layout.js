@@ -4,6 +4,9 @@ export const metadata = {
   title: "Just the Recipe — No story, just ingredients and instructions",
   description: "Paste any recipe URL and get back just the ingredients and steps. No life stories, no ads, no scrolling. Just the recipe.",
   keywords: "recipe extractor, just the recipe, clean recipes, recipe without story",
+  verification: {
+    google: "y5p3sXkgmt7wrzJYvoPuUoZ1omKxC_igwCcslBIFssU",
+  },
   openGraph: {
     title: "Just the Recipe",
     description: "Paste any recipe URL. Get just the ingredients and instructions.",

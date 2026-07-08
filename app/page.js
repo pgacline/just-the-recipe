@@ -152,6 +152,12 @@ function HomeContent() {
     window.open(printUrl, "_blank");
   }
 
+  function handleShop() {
+    if (!recipe) return;
+    const title = encodeURIComponent(recipe.title);
+    window.open(`https://www.instacart.com/store/search_v3/term?term=${title}`, "_blank");
+  }
+
   const multiplierLabels = ["½x", "1x", "2x", "3x"];
 
   return (
@@ -261,6 +267,18 @@ function HomeContent() {
                 </li>
               ))}
             </ol>
+
+            <div style={{marginTop: "28px", paddingTop: "24px", borderTop: "1px solid #f3f4f6"}}>
+              <button
+                onClick={handleShop}
+                style={{width: "100%", background: "#059669", color: "white", border: "none", padding: "14px", borderRadius: "12px", fontSize: "15px", fontWeight: "600", cursor: "pointer"}}
+              >
+                🛒 Shop this recipe on Instacart
+              </button>
+              <p style={{textAlign: "center", fontSize: "12px", color: "#9ca3af", marginTop: "8px", marginBottom: 0}}>
+                We may earn a commission on purchases
+              </p>
+            </div>
           </div>
         )}
       </main>

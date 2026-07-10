@@ -67,6 +67,7 @@ function HomeContent() {
   const [currentRecipeId, setCurrentRecipeId] = useState(null);
   const [multiplierIndex, setMultiplierIndex] = useState(1);
   const [baseServings, setBaseServings] = useState(4);
+  const [showRecipe, setShowRecipe] = useState(false);
 
   const currentMultiplier = MULTIPLIERS[multiplierIndex];
   const currentServings = Math.max(1, Math.round(baseServings * currentMultiplier));
@@ -90,6 +91,7 @@ function HomeContent() {
     setSaved(false);
     setCurrentRecipeId(null);
     setMultiplierIndex(1);
+    setShowRecipe(false);
 
     try {
       const res = await fetch(`/api/extract?url=${encodeURIComponent(urlToUse)}`);
@@ -98,15 +100,28 @@ function HomeContent() {
         setError(data.error);
       } else {
         setRecipe(data);
-        if (data.id) setCurrentRecipeId(data.id);
+        if (data.id) {
+          setCurrentRecipeId(data.id);
+          // Check if already saved
+          if (user) {
+            const { data: existingSave } = await supabase
+              .from("saved_recipes")
+              .select("id")
+              .eq("user_id", user.id)
+              .eq("recipe_id", data.id)
+              .single();
+            if (existingSave) setSaved(true);
+          }
+        }
         setBaseServings(parseInt(data.servings) || 4);
+        setShowRecipe(true);
       }
     } catch (e) {
       setError("Something went wrong. Try a different URL.");
     } finally {
       setLoading(false);
     }
-  }, [url]);
+  }, [url, user]);
 
   useEffect(() => {
     const paramUrl = searchParams.get("url");
@@ -120,13 +135,26 @@ function HomeContent() {
     if (!user) { router.push("/auth"); return; }
     if (!currentRecipeId) return;
     setSaveLoading(true);
-    const res = await fetch("/api/save", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ user_id: user.id, recipe_id: currentRecipeId }),
-    });
-    const data = await res.json();
-    if (!data.error) setSaved(true);
+
+    if (saved) {
+      // Unsave
+      const res = await fetch("/api/unsave", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id: user.id, recipe_id: currentRecipeId }),
+      });
+      const data = await res.json();
+      if (!data.error) setSaved(false);
+    } else {
+      // Save
+      const res = await fetch("/api/save", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id: user.id, recipe_id: currentRecipeId }),
+      });
+      const data = await res.json();
+      if (!data.error) setSaved(true);
+    }
     setSaveLoading(false);
   }
 
@@ -154,8 +182,18 @@ function HomeContent() {
 
   function handleShop() {
     if (!recipe) return;
-    const title = encodeURIComponent(recipe.title);
-    window.open(`https://www.instacart.com/store/search_v3/term?term=${title}`, "_blank");
+    const title = encodeURIComponent(recipe.title + " ingredients");
+    window.open(`https://www.instacart.com/store/search?k=${title}`, "_blank");
+  }
+
+  function handleBack() {
+    setRecipe(null);
+    setError(null);
+    setShowRecipe(false);
+    setUrl("");
+    setSaved(false);
+    setCurrentRecipeId(null);
+    setMultiplierIndex(1);
   }
 
   const multiplierLabels = ["½x", "1x", "2x", "3x"];
@@ -163,7 +201,12 @@ function HomeContent() {
   return (
     <div style={{background: "white", minHeight: "100vh"}}>
       <nav style={{background: "white", borderBottom: "1px solid #e5e7eb", padding: "12px 16px", display: "flex", justifyContent: "space-between", alignItems: "center"}}>
-        <span style={{color: "#111827", fontWeight: "700", fontSize: "17px"}}>just the <span style={{color: "#059669"}}>recipe</span></span>
+        <button
+          onClick={showRecipe ? handleBack : undefined}
+          style={{color: "#111827", fontWeight: "700", fontSize: "17px", background: "none", border: "none", cursor: showRecipe ? "pointer" : "default", padding: 0}}
+        >
+          {showRecipe ? "← " : ""}<span style={{color: showRecipe ? "#111827" : "#111827"}}>just the </span><span style={{color: "#059669"}}>recipe</span>
+        </button>
         <div style={{display: "flex", gap: "8px", alignItems: "center"}}>
           {user ? (
             <>
@@ -177,30 +220,35 @@ function HomeContent() {
       </nav>
 
       <main style={{maxWidth: "672px", margin: "0 auto", padding: "24px 16px"}}>
-        <div style={{textAlign: "center", marginBottom: "24px"}}>
-          <h1 style={{fontSize: "28px", fontWeight: "700", color: "#111827", marginBottom: "8px"}}>
-            just the <span style={{color: "#059669"}}>recipe</span>
-          </h1>
-          <p style={{color: "#6b7280", fontSize: "15px", margin: 0}}>Paste any recipe URL. We'll strip out the story.</p>
-        </div>
 
-        <div style={{display: "flex", flexDirection: "column", gap: "8px", marginBottom: "24px"}}>
-          <input
-            type="url"
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="https://example.com/some-recipe"
-            style={{width: "100%", border: "1px solid #d1d5db", borderRadius: "12px", padding: "12px 16px", fontSize: "16px", color: "#111827", background: "white", outline: "none", boxSizing: "border-box"}}
-          />
-          <button
-            onClick={() => handleExtract()}
-            disabled={loading}
-            style={{background: "#059669", color: "white", border: "none", padding: "13px", borderRadius: "12px", fontSize: "15px", fontWeight: "600", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.5 : 1, width: "100%"}}
-          >
-            {loading ? "Extracting..." : "Extract recipe"}
-          </button>
-        </div>
+        {!showRecipe && (
+          <>
+            <div style={{textAlign: "center", marginBottom: "24px"}}>
+              <h1 style={{fontSize: "28px", fontWeight: "700", color: "#111827", marginBottom: "8px"}}>
+                just the <span style={{color: "#059669"}}>recipe</span>
+              </h1>
+              <p style={{color: "#6b7280", fontSize: "15px", margin: 0}}>Paste any recipe URL. We'll strip out the story.</p>
+            </div>
+
+            <div style={{display: "flex", flexDirection: "column", gap: "8px", marginBottom: "24px"}}>
+              <input
+                type="url"
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="https://example.com/some-recipe"
+                style={{width: "100%", border: "1px solid #d1d5db", borderRadius: "12px", padding: "12px 16px", fontSize: "16px", color: "#111827", background: "white", outline: "none", boxSizing: "border-box"}}
+              />
+              <button
+                onClick={() => handleExtract()}
+                disabled={loading}
+                style={{background: "#059669", color: "white", border: "none", padding: "13px", borderRadius: "12px", fontSize: "15px", fontWeight: "600", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.5 : 1, width: "100%"}}
+              >
+                {loading ? "Extracting..." : "Extract recipe"}
+              </button>
+            </div>
+          </>
+        )}
 
         {error && (
           <div style={{background: "#fef2f2", border: "1px solid #fecaca", color: "#b91c1c", padding: "12px 16px", borderRadius: "12px", fontSize: "14px", marginBottom: "24px"}}>
@@ -210,25 +258,24 @@ function HomeContent() {
 
         {loading && <SkeletonCard />}
 
-        {!loading && recipe && (
+        {!loading && recipe && showRecipe && (
           <div style={{background: "white", border: "1px solid #e5e7eb", borderRadius: "16px", padding: "24px", boxShadow: "0 1px 3px rgba(0,0,0,0.1)"}}>
-            <div style={{display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "8px", gap: "12px"}}>
-              <h2 style={{fontSize: "20px", fontWeight: "700", color: "#111827", margin: 0, flex: 1}}>{recipe.title}</h2>
-              <div style={{display: "flex", gap: "6px", flexShrink: 0}}>
-                <button
-                  onClick={handlePrint}
-                  style={{background: "#f3f4f6", color: "#374151", border: "1px solid #d1d5db", padding: "7px 10px", borderRadius: "8px", fontSize: "12px", fontWeight: "500", cursor: "pointer"}}
-                >
-                  🖨
-                </button>
-                <button
-                  onClick={handleSave}
-                  disabled={saveLoading || saved}
-                  style={{background: saved ? "#ecfdf5" : "#f3f4f6", color: saved ? "#059669" : "#374151", border: saved ? "1px solid #a7f3d0" : "1px solid #d1d5db", padding: "7px 10px", borderRadius: "8px", fontSize: "12px", fontWeight: "500", cursor: "pointer"}}
-                >
-                  {saved ? "✓" : "♡"}
-                </button>
-              </div>
+            <h2 style={{fontSize: "20px", fontWeight: "700", color: "#111827", margin: "0 0 12px 0"}}>{recipe.title}</h2>
+
+            <div style={{display: "flex", gap: "8px", marginBottom: "20px", flexWrap: "wrap"}}>
+              <button
+                onClick={handlePrint}
+                style={{background: "#f3f4f6", color: "#374151", border: "1px solid #d1d5db", padding: "10px 16px", borderRadius: "10px", fontSize: "14px", fontWeight: "500", cursor: "pointer", flex: 1}}
+              >
+                🖨 Print
+              </button>
+              <button
+                onClick={handleSave}
+                disabled={saveLoading}
+                style={{background: saved ? "#ecfdf5" : "#f3f4f6", color: saved ? "#059669" : "#374151", border: saved ? "1px solid #a7f3d0" : "1px solid #d1d5db", padding: "10px 16px", borderRadius: "10px", fontSize: "14px", fontWeight: "500", cursor: "pointer", flex: 1}}
+              >
+                {saved ? "✓ Saved" : saveLoading ? "..." : "♡ Save"}
+              </button>
             </div>
 
             <div style={{display: "flex", gap: "12px", alignItems: "center", marginBottom: "24px", flexWrap: "wrap"}}>
@@ -238,13 +285,13 @@ function HomeContent() {
                 <button
                   onClick={() => setMultiplierIndex(i => Math.max(0, i - 1))}
                   disabled={multiplierIndex === 0}
-                  style={{width: "26px", height: "26px", borderRadius: "50%", border: "1px solid #d1d5db", background: "#f3f4f6", cursor: multiplierIndex === 0 ? "not-allowed" : "pointer", fontSize: "14px", display: "flex", alignItems: "center", justifyContent: "center", color: "#374151", opacity: multiplierIndex === 0 ? 0.4 : 1}}
+                  style={{width: "30px", height: "30px", borderRadius: "50%", border: "1px solid #d1d5db", background: "#f3f4f6", cursor: multiplierIndex === 0 ? "not-allowed" : "pointer", fontSize: "16px", display: "flex", alignItems: "center", justifyContent: "center", color: "#374151", opacity: multiplierIndex === 0 ? 0.4 : 1}}
                 >−</button>
-                <span style={{fontSize: "13px", fontWeight: "600", color: "#059669", minWidth: "24px", textAlign: "center"}}>{multiplierLabels[multiplierIndex]}</span>
+                <span style={{fontSize: "14px", fontWeight: "600", color: "#059669", minWidth: "28px", textAlign: "center"}}>{multiplierLabels[multiplierIndex]}</span>
                 <button
                   onClick={() => setMultiplierIndex(i => Math.min(MULTIPLIERS.length - 1, i + 1))}
                   disabled={multiplierIndex === MULTIPLIERS.length - 1}
-                  style={{width: "26px", height: "26px", borderRadius: "50%", border: "1px solid #d1d5db", background: "#f3f4f6", cursor: multiplierIndex === MULTIPLIERS.length - 1 ? "not-allowed" : "pointer", fontSize: "14px", display: "flex", alignItems: "center", justifyContent: "center", color: "#374151", opacity: multiplierIndex === MULTIPLIERS.length - 1 ? 0.4 : 1}}
+                  style={{width: "30px", height: "30px", borderRadius: "50%", border: "1px solid #d1d5db", background: "#f3f4f6", cursor: multiplierIndex === MULTIPLIERS.length - 1 ? "not-allowed" : "pointer", fontSize: "16px", display: "flex", alignItems: "center", justifyContent: "center", color: "#374151", opacity: multiplierIndex === MULTIPLIERS.length - 1 ? 0.4 : 1}}
                 >+</button>
               </div>
             </div>

@@ -42,8 +42,9 @@ export default function RecipeClient({ recipe }) {
   }
 
   function handleShop() {
-    const title = encodeURIComponent(recipe.title);
-    window.open(`https://www.instacart.com/store/search_v3/term?term=${title}`, "_blank");
+    if (!recipe) return;
+    const title = encodeURIComponent(recipe.title + " ingredients");
+    window.open(`https://www.instacart.com/store/search?k=${title}`, "_blank");
   }
 
   return (

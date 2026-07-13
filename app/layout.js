@@ -26,7 +26,7 @@ export default function RootLayout({ children }) {
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="Just the Recipe" />
         <link rel="apple-touch-icon" href="/icon-192.png" />
-        <meta name="impact-site-verification" value="a12f7ef4-2a59-482a-872a-fb3d8ceecc50" />
+        <meta name="impact-site-verification" value="75c44d88-4095-45e3-be92-ddc147514a19" />
       </head>
       <body style={{margin: 0, padding: 0, background: "white", color: "#111827", fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"}}>
         {children}

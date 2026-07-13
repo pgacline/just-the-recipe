@@ -102,7 +102,6 @@ function HomeContent() {
         setRecipe(data);
         if (data.id) {
           setCurrentRecipeId(data.id);
-          // Check if already saved
           if (user) {
             const { data: existingSave } = await supabase
               .from("saved_recipes")
@@ -135,9 +134,7 @@ function HomeContent() {
     if (!user) { router.push("/auth"); return; }
     if (!currentRecipeId) return;
     setSaveLoading(true);
-
     if (saved) {
-      // Unsave
       const res = await fetch("/api/unsave", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -146,7 +143,6 @@ function HomeContent() {
       const data = await res.json();
       if (!data.error) setSaved(false);
     } else {
-      // Save
       const res = await fetch("/api/save", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -205,9 +201,10 @@ function HomeContent() {
           onClick={showRecipe ? handleBack : undefined}
           style={{color: "#111827", fontWeight: "700", fontSize: "17px", background: "none", border: "none", cursor: showRecipe ? "pointer" : "default", padding: 0}}
         >
-          {showRecipe ? "← " : ""}<span style={{color: showRecipe ? "#111827" : "#111827"}}>just the </span><span style={{color: "#059669"}}>recipe</span>
+          {showRecipe ? "← " : ""}just the <span style={{color: "#059669"}}>recipe</span>
         </button>
         <div style={{display: "flex", gap: "8px", alignItems: "center"}}>
+          <button onClick={() => router.push("/about")} style={{color: "#374151", background: "none", border: "none", padding: "7px 10px", fontSize: "13px", cursor: "pointer"}}>About</button>
           {user ? (
             <>
               <button onClick={() => router.push("/saved")} style={{color: "#111827", background: "#f3f4f6", border: "1px solid #d1d5db", padding: "7px 12px", borderRadius: "10px", fontSize: "13px", fontWeight: "500", cursor: "pointer"}}>Saved</button>
@@ -220,7 +217,6 @@ function HomeContent() {
       </nav>
 
       <main style={{maxWidth: "672px", margin: "0 auto", padding: "24px 16px"}}>
-
         {!showRecipe && (
           <>
             <div style={{textAlign: "center", marginBottom: "24px"}}>
@@ -262,7 +258,7 @@ function HomeContent() {
           <div style={{background: "white", border: "1px solid #e5e7eb", borderRadius: "16px", padding: "24px", boxShadow: "0 1px 3px rgba(0,0,0,0.1)"}}>
             <h2 style={{fontSize: "20px", fontWeight: "700", color: "#111827", margin: "0 0 12px 0"}}>{recipe.title}</h2>
 
-            <div style={{display: "flex", gap: "8px", marginBottom: "20px", flexWrap: "wrap"}}>
+            <div style={{display: "flex", gap: "8px", marginBottom: "20px"}}>
               <button
                 onClick={handlePrint}
                 style={{background: "#f3f4f6", color: "#374151", border: "1px solid #d1d5db", padding: "10px 16px", borderRadius: "10px", fontSize: "14px", fontWeight: "500", cursor: "pointer", flex: 1}}

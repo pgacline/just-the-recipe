@@ -23,7 +23,7 @@ export default function AuthPage() {
       if (error) {
         setError(error.message);
       } else {
-        setMessage("Check your email for a confirmation link!");
+        setMessage("Account created! You can now sign in.");
       }
     } else {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -44,7 +44,7 @@ export default function AuthPage() {
     <div style={{background: "white", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px"}}>
       <div style={{width: "100%", maxWidth: "380px"}}>
         <h1 style={{fontSize: "28px", fontWeight: "700", textAlign: "center", marginBottom: "8px", color: "#111827"}}>
-          just the <span style={{color: "#059669"}}>recipe</span>
+          cut to the <span style={{color: "#059669"}}>recipe</span>
         </h1>
         <p style={{color: "#6b7280", fontSize: "14px", textAlign: "center", marginBottom: "32px"}}>
           {isSignUp ? "Create an account to save recipes" : "Sign in to your account"}
@@ -58,19 +58,7 @@ export default function AuthPage() {
               onChange={(e) => setEmail(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Email address"
-              style={{
-                width: "100%",
-                border: "1px solid #d1d5db",
-                borderRadius: "12px",
-                padding: "12px 16px",
-                fontSize: "14px",
-                color: "#111827",
-                background: "white",
-                outline: "none",
-                boxSizing: "border-box",
-                marginBottom: "8px",
-                display: "block"
-              }}
+              style={{width: "100%", border: "1px solid #d1d5db", borderRadius: "12px", padding: "12px 16px", fontSize: "14px", color: "#111827", background: "white", outline: "none", boxSizing: "border-box", marginBottom: "8px", display: "block"}}
             />
             <input
               type="password"
@@ -78,18 +66,7 @@ export default function AuthPage() {
               onChange={(e) => setPassword(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Password"
-              style={{
-                width: "100%",
-                border: "1px solid #d1d5db",
-                borderRadius: "12px",
-                padding: "12px 16px",
-                fontSize: "14px",
-                color: "#111827",
-                background: "white",
-                outline: "none",
-                boxSizing: "border-box",
-                display: "block"
-              }}
+              style={{width: "100%", border: "1px solid #d1d5db", borderRadius: "12px", padding: "12px 16px", fontSize: "14px", color: "#111827", background: "white", outline: "none", boxSizing: "border-box", display: "block"}}
             />
           </div>
 
@@ -108,19 +85,7 @@ export default function AuthPage() {
           <button
             onClick={handleSubmit}
             disabled={loading}
-            style={{
-              width: "100%",
-              background: "#059669",
-              color: "white",
-              border: "none",
-              borderRadius: "12px",
-              padding: "12px",
-              fontSize: "14px",
-              fontWeight: "500",
-              cursor: loading ? "not-allowed" : "pointer",
-              opacity: loading ? 0.5 : 1,
-              marginBottom: "16px"
-            }}
+            style={{width: "100%", background: "#059669", color: "white", border: "none", borderRadius: "12px", padding: "12px", fontSize: "14px", fontWeight: "500", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.5 : 1, marginBottom: "16px"}}
           >
             {loading ? "Please wait..." : isSignUp ? "Create account" : "Sign in"}
           </button>

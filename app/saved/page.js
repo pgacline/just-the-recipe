@@ -48,7 +48,7 @@ export default function SavedPage() {
           onClick={() => router.push("/")}
           style={{fontWeight: "700", fontSize: "17px", color: "#111827", background: "none", border: "none", cursor: "pointer"}}
         >
-          ← just the <span style={{color: "#059669"}}>recipe</span>
+          ← cut to the <span style={{color: "#059669"}}>recipe</span>
         </button>
         <button
           onClick={() => supabase.auth.signOut().then(() => router.push("/"))}
@@ -87,17 +87,7 @@ export default function SavedPage() {
             {recipes.map(recipe => (
               <div
                 key={recipe.id}
-                style={{
-                  background: "white",
-                  border: "1px solid #e5e7eb",
-                  borderRadius: "12px",
-                  padding: "16px",
-                  boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  gap: "12px"
-                }}
+                style={{background: "white", border: "1px solid #e5e7eb", borderRadius: "12px", padding: "16px", boxShadow: "0 1px 2px rgba(0,0,0,0.05)", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px"}}
               >
                 <div
                   style={{flex: 1, cursor: "pointer"}}
@@ -112,18 +102,7 @@ export default function SavedPage() {
                 <button
                   onClick={(e) => handleRemove(e, recipe.id)}
                   disabled={removing === recipe.id}
-                  style={{
-                    background: "#fef2f2",
-                    color: "#ef4444",
-                    border: "1px solid #fecaca",
-                    borderRadius: "8px",
-                    padding: "8px 12px",
-                    fontSize: "13px",
-                    fontWeight: "500",
-                    cursor: "pointer",
-                    flexShrink: 0,
-                    opacity: removing === recipe.id ? 0.5 : 1
-                  }}
+                  style={{background: "#fef2f2", color: "#ef4444", border: "1px solid #fecaca", borderRadius: "8px", padding: "8px 12px", fontSize: "13px", fontWeight: "500", cursor: "pointer", flexShrink: 0, opacity: removing === recipe.id ? 0.5 : 1}}
                 >
                   {removing === recipe.id ? "..." : "Remove"}
                 </button>

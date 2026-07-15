@@ -201,7 +201,7 @@ function HomeContent() {
           onClick={showRecipe ? handleBack : undefined}
           style={{color: "#111827", fontWeight: "700", fontSize: "17px", background: "none", border: "none", cursor: showRecipe ? "pointer" : "default", padding: 0}}
         >
-          {showRecipe ? "← " : ""}just the <span style={{color: "#059669"}}>recipe</span>
+          {showRecipe ? "← " : ""}cut to the <span style={{color: "#059669"}}>recipe</span>
         </button>
         <div style={{display: "flex", gap: "8px", alignItems: "center"}}>
           <button onClick={() => router.push("/about")} style={{color: "#374151", background: "none", border: "none", padding: "7px 10px", fontSize: "13px", cursor: "pointer"}}>About</button>
@@ -221,9 +221,9 @@ function HomeContent() {
           <>
             <div style={{textAlign: "center", marginBottom: "24px"}}>
               <h1 style={{fontSize: "28px", fontWeight: "700", color: "#111827", marginBottom: "8px"}}>
-                just the <span style={{color: "#059669"}}>recipe</span>
+                cut to the <span style={{color: "#059669"}}>recipe</span>
               </h1>
-              <p style={{color: "#6b7280", fontSize: "15px", margin: 0}}>Paste any recipe URL. We'll strip out the story.</p>
+              <p style={{color: "#6b7280", fontSize: "15px", margin: 0}}>Paste any recipe URL. We'll cut straight to the good stuff.</p>
             </div>
 
             <div style={{display: "flex", flexDirection: "column", gap: "8px", marginBottom: "24px"}}>
@@ -240,7 +240,7 @@ function HomeContent() {
                 disabled={loading}
                 style={{background: "#059669", color: "white", border: "none", padding: "13px", borderRadius: "12px", fontSize: "15px", fontWeight: "600", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.5 : 1, width: "100%"}}
               >
-                {loading ? "Extracting..." : "Extract recipe"}
+                {loading ? "Extracting..." : "Cut to the recipe"}
               </button>
             </div>
           </>

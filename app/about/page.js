@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 export default function AboutPage() {
@@ -12,7 +13,7 @@ export default function AboutPage() {
           onClick={() => router.push("/")}
           style={{color: "#111827", fontWeight: "700", fontSize: "17px", background: "none", border: "none", cursor: "pointer"}}
         >
-          ← just the <span style={{color: "#059669"}}>recipe</span>
+          ← cut to the <span style={{color: "#059669"}}>recipe</span>
         </button>
       </nav>
 
@@ -20,7 +21,7 @@ export default function AboutPage() {
         <h1 style={{fontSize: "28px", fontWeight: "700", color: "#111827", marginBottom: "16px"}}>About</h1>
 
         <p style={{fontSize: "16px", lineHeight: "1.7", color: "#374151", marginBottom: "16px"}}>
-          Just the Recipe exists because recipe websites are broken. You search for "chocolate chip cookies," click the first result, and spend the next two minutes scrolling past someone's childhood memories, a history of chocolate, and three paragraphs about how their grandmother would have loved these cookies — before finally finding the actual recipe buried at the bottom.
+          Cut to the Recipe exists because recipe websites are broken. You search for "chocolate chip cookies," click the first result, and spend the next two minutes scrolling past someone's childhood memories, a history of chocolate, and three paragraphs about how their grandmother would have loved these cookies — before finally finding the actual recipe buried at the bottom.
         </p>
 
         <p style={{fontSize: "16px", lineHeight: "1.7", color: "#374151", marginBottom: "16px"}}>
@@ -28,7 +29,7 @@ export default function AboutPage() {
         </p>
 
         <p style={{fontSize: "16px", lineHeight: "1.7", color: "#374151", marginBottom: "32px"}}>
-          Paste any recipe URL and we strip everything out — the ads, the stories, the popups — and give you just the ingredients and instructions. Clean, fast, and easy to read while you're actually cooking.
+          Paste any recipe URL and we cut straight to the good stuff — the ingredients and instructions. Clean, fast, and easy to read while you're actually cooking.
         </p>
 
         <h2 style={{fontSize: "20px", fontWeight: "700", color: "#111827", marginBottom: "12px"}}>Features</h2>
@@ -61,11 +62,11 @@ export default function AboutPage() {
 }
 
 function FeedbackForm() {
-  const [name, setName] = require("react").useState("");
-  const [email, setEmail] = require("react").useState("");
-  const [message, setMessage] = require("react").useState("");
-  const [sent, setSent] = require("react").useState(false);
-  const [loading, setLoading] = require("react").useState(false);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [message, setMessage] = useState("");
+  const [sent, setSent] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   async function handleSubmit() {
     if (!message) return;

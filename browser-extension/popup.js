@@ -1,4 +1,4 @@
-const SITE_URL = "https://just-the-recipe-delta.vercel.app";
+const SITE_URL = "https://cuttotherecipe.com";
 
 document.getElementById("extractBtn").addEventListener("click", async () => {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -9,7 +9,7 @@ document.getElementById("extractBtn").addEventListener("click", async () => {
     return;
   }
 
-  statusDiv.textContent = "Opening Just the Recipe...";
+  statusDiv.textContent = "Opening Cut to the Recipe...";
   
   const targetUrl = `${SITE_URL}?url=${encodeURIComponent(tab.url)}`;
   chrome.tabs.create({ url: targetUrl });

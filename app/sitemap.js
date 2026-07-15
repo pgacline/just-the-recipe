@@ -1,7 +1,7 @@
 import { supabase } from "@/lib/supabase";
 
 export default async function sitemap() {
-  const baseUrl = "https://just-the-recipe-delta.vercel.app";
+  const baseUrl = "https://cuttotherecipe.com";
 
   const { data: recipes } = await supabase
     .from("recipes")

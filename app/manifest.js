@@ -1,7 +1,7 @@
 export default function manifest() {
   return {
-    name: "Just the Recipe",
-    short_name: "Just the Recipe",
+    name: "Cut to the Recipe",
+    short_name: "Cut to Recipe",
     description: "Paste any recipe URL. Get just the ingredients and instructions.",
     start_url: "/",
     display: "standalone",

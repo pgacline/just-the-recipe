@@ -53,7 +53,7 @@ function PrintContent() {
       </ol>
 
       <div style={{marginTop: "40px", paddingTop: "16px", borderTop: "1px solid #e5e7eb", fontSize: "12px", color: "#9ca3af", textAlign: "center"}}>
-        just-the-recipe-delta.vercel.app
+        cuttotherecipe.com
       </div>
     </div>
   );

@@ -27,15 +27,32 @@ function extractSchemaOrg(html) {
   const scripts = $('script[type="application/ld+json"]');
   for (let i = 0; i < scripts.length; i++) {
     try {
-      const data = JSON.parse($(scripts[i]).html());
-      const recipe = Array.isArray(data)
-        ? data.find(d => d["@type"] === "Recipe")
-        : data["@type"] === "Recipe" ? data : null;
-      if (recipe) {
+      const raw = $(scripts[i]).html();
+      if (!raw) continue;
+      const data = JSON.parse(raw);
+
+      // Handle arrays and nested @graph structures
+      let recipes = [];
+      if (Array.isArray(data)) {
+        recipes = data.filter(d => d["@type"] === "Recipe");
+        // Also check nested @graph
+        data.forEach(d => {
+          if (d["@graph"]) {
+            recipes = recipes.concat(d["@graph"].filter(g => g["@type"] === "Recipe"));
+          }
+        });
+      } else if (data["@type"] === "Recipe") {
+        recipes = [data];
+      } else if (data["@graph"]) {
+        recipes = data["@graph"].filter(g => g["@type"] === "Recipe");
+      }
+
+      if (recipes.length > 0) {
+        const recipe = recipes[0];
         return {
           title: recipe.name || "",
           servings: recipe.recipeYield || "",
-          time: recipe.totalTime || recipe.cookTime || "",
+          time: recipe.totalTime || recipe.cookTime || recipe.prepTime || "",
           ingredients: Array.isArray(recipe.recipeIngredient)
             ? recipe.recipeIngredient.map(normalizeIngredient)
             : [],
@@ -49,19 +66,92 @@ function extractSchemaOrg(html) {
   return null;
 }
 
-async function extractWithAI(html) {
+function cleanHtmlForAI(html) {
   const $ = cheerio.load(html);
-  $("script, style, nav, footer, header, aside").remove();
-  const bodyText = $("body").text();
-  const cleanText = bodyText.replace(/\s+/g, " ").trim().slice(0, 8000);
+
+  // Remove all the junk
+  $(
+    "script, style, nav, footer, header, aside, iframe, noscript, " +
+    ".ad, .ads, .advertisement, .sidebar, .comments, .comment, " +
+    ".social-share, .newsletter, .popup, .modal, .cookie, " +
+    ".related-posts, .related-recipes, .jump-to-recipe, " +
+    "[class*='ad-'], [class*='sidebar'], [class*='popup'], " +
+    "[class*='newsletter'], [class*='social'], [class*='share'], " +
+    "[id*='ad-'], [id*='sidebar'], [id*='popup'], [id*='comments']"
+  ).remove();
+
+  // Remove images but keep their alt text as context
+  $("img").each((_, el) => {
+    const alt = $(el).attr("alt");
+    if (alt && alt.length > 3) {
+      $(el).replaceWith(`<span>[image: ${alt}]</span>`);
+    } else {
+      $(el).remove();
+    }
+  });
+
+  // Try to find the main recipe content area first
+  const recipeSelectors = [
+    "[class*='recipe']",
+    "[id*='recipe']",
+    "article",
+    "main",
+    ".entry-content",
+    ".post-content",
+    ".content",
+  ];
+
+  let content = "";
+  for (const selector of recipeSelectors) {
+    const el = $(selector).first();
+    if (el.length && el.text().trim().length > 200) {
+      content = el.text().replace(/\s+/g, " ").trim();
+      break;
+    }
+  }
+
+  // Fall back to full body if nothing found
+  if (!content) {
+    content = $("body").text().replace(/\s+/g, " ").trim();
+  }
+
+  // Limit to 10000 chars (up from 8000)
+  return content.slice(0, 10000);
+}
+
+async function extractWithAI(html) {
+  const cleanText = cleanHtmlForAI(html);
+
   const message = await client.messages.create({
     model: "claude-haiku-4-5",
-    max_tokens: 1024,
+    max_tokens: 2048,
     messages: [{
       role: "user",
-      content: "Extract the recipe from this text and return ONLY a JSON object with fields: title, servings, time, ingredients (array of plain text strings), steps (array of plain text strings). Return ONLY raw JSON, no markdown, no code fences. Text: " + cleanText
+      content: `You are a recipe extraction expert. Extract the complete recipe from this webpage text.
+
+IMPORTANT RULES:
+- Extract ALL ingredients, even if the list seems long
+- Extract ALL steps — do not stop early, get every single step even if there are many
+- Steps may be scattered through the page with images between them — collect them all
+- Ignore ads, comments, related recipes, and other non-recipe content
+- Each ingredient and step must be a plain text string, never an object
+
+Return ONLY a JSON object with these exact fields:
+{
+  "title": "recipe name",
+  "servings": "number of servings as a string",
+  "time": "total time as a string",
+  "ingredients": ["ingredient 1", "ingredient 2"],
+  "steps": ["step 1", "step 2", "step 3"]
+}
+
+Return ONLY the raw JSON. No markdown, no code fences, no explanation.
+
+Webpage text:
+${cleanText}`
     }],
   });
+
   let text = message.content[0].text.trim();
   text = text.replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/```\s*$/i, "").trim();
   const parsed = JSON.parse(text);
@@ -104,13 +194,14 @@ export async function GET(request) {
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
         "Accept-Language": "en-US,en;q=0.5",
       },
-      timeout: 10000,
+      timeout: 15000,
     });
 
     let recipe = extractSchemaOrg(response.data);
     let method = "schema.org";
-    if (!recipe || recipe.ingredients.length === 0) {
-      console.log("No schema.org data found, trying AI for:", url);
+
+    if (!recipe || recipe.ingredients.length === 0 || recipe.steps.length === 0) {
+      console.log("Schema.org incomplete or missing, trying AI for:", url);
       recipe = await extractWithAI(response.data);
       method = "ai";
     }
